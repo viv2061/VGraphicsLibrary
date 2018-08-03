@@ -7,24 +7,19 @@
   <script src = "vGraphics.js"/></script>
   <script>
     let r = new Rectangle(200, 400, 100, 100, "red");
-    //r.add();
     
     let e = new Ellipse(300, 200, 50, 100, "blue");
-    //e.add();
 
     let c = new Circle(500, 500, 50, "green");
-    //c.add();
 
-
-    var i = new ImagePic("https://www.w3schools.com/w3css/img_lights.jpg", 400, 400, 100, 100);
-    //i.add();
-
-    var t = new Text("hello world", 100, 100, "Cursive", 20, "red");
+    let i = new ImagePic("https://www.w3schools.com/w3css/img_lights.jpg", 400, 400);
+    setTimeout(function() {
+      i.scale(0.25);
+    }, 20);
     
-    /*
+    let t = new Text("hello world", 100, 100, "Cursive", 20, "red");
+    
     update();
-    updateCanvas();
-    //requestAnimationFrame(update);
     function update() {
       r.rotate(5);
       e.rotate(10);
@@ -32,6 +27,6 @@
       t.rotate(5);
       updateCanvas();
       requestAnimationFrame(update);
-    } */
+    }
   </script>
 </html>
