@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <body style = "text-align: center" onload = "Start()">
+    <canvas style = "background-color: white; border-style: solid" width = "800" height = "800"></canvas>
+  </body>
+  <script src = "jsGraphics.js"></script>
+  <script>
+    var square = new Rect(canvas.width - (canvas.width / 3), 400, 50, 50, "red");
+    var square2 = new Rect(canvas.width / 3, 400, 50, 50, "blue");
+
+    var thing = new Text("hello", 400, 400, "Arial", 30, "black");
+
+    var he = new ImagePic("https://www.w3schools.com/w3css/img_lights.jpg", 100, 100, 10, 10);
+    
+    function start() {
+      square2.rotation = 45;
+    }
+
+    function update() {
+      if (Input.mouse.onMouseDrag()) {
+        square.rotate(3);
+      }
+      if (Input.key.getKeyPressed(32)) {
+        square.rotate(10);
+      }
+      if (Input.key.getKeyPressed(65)) {
+        square.move(-5, 0);
+      } else if (Input.key.getKeyPressed(68)) {
+        square.move(5, 0);
+      }
+
+      ctx.font="30px Arial";
+      var txt="Hello World";
+      ctx.fillText("width:" + ctx.measureText(txt).width,10,50)
+      ctx.fillText(txt,10,100); 
+
+      thing.add();
+      he.add();
+
+      square.rotate(5);
+    }
+  </script>
+</html>

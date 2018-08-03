@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <body style = "text-align: center;">
+    <canvas style = "border-style: solid; background-color: white;" width = "800" height = "800">Canvas not supported</canvas>
+    <h3 style = "font-family: Calibri">VGraphics</h3>
+  </body>
+  <script src = "vGraphics.js"/></script>
+  <script>
+    let r = new Rectangle(200, 400, 100, 100, "red");
+    //r.add();
+    
+    let e = new Ellipse(300, 200, 50, 100, "blue");
+    //e.add();
+
+    let c = new Circle(500, 500, 50, "green");
+    //c.add();
+
+
+    var i = new ImagePic("https://www.w3schools.com/w3css/img_lights.jpg", 400, 400, 100, 100);
+    //i.add();
+
+    var t = new Text("hello world", 100, 100, "Cursive", 20, "red");
+    
+    /*
+    update();
+    updateCanvas();
+    //requestAnimationFrame(update);
+    function update() {
+      r.rotate(5);
+      e.rotate(10);
+      c.move(-1, -2);
+      t.rotate(5);
+      updateCanvas();
+      requestAnimationFrame(update);
+    } */
+  </script>
+</html>
