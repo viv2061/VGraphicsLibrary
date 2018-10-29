@@ -350,6 +350,8 @@ var Input = {
   }
 };
 
+var r  = new Rect(100, 200, 50, 50, "green");
+
 //the start method that is called when body is loaded
 function Start() {
   updateCanvas();
@@ -363,6 +365,7 @@ function Start() {
 function Update() {
   updateCanvas();
   update();
+  r.rotate(5);
   updateCanvas();
   requestAnimationFrame(Update);
 }
