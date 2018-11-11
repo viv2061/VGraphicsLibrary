@@ -16,26 +16,31 @@ class vObject {
       rotation: 0,
       translate: function(aX, aY) {
         this.position.x += aX || 0;
-        if (thisvo.collide(undefined, true)) {
-          thisvo.physics.velocity.x *= -.7;
-        }
-        while (thisvo.collide(undefined, true)) {
-          this.position.x -= Math.sign(aX);
-        }
         this.position.y += aY || 0;
-        if (thisvo.collide(undefined, true)) {
-          thisvo.physics.velocity.y *= -.7;
-        }
-        while (thisvo.collide(undefined, true)) {
-          this.position.y -= Math.sign(aY);
-        }
+        thisvo.collider.points.forEach(point => {
+          point.x += aX;
+          point.y += aY;
+        });
       },
       rotate: function(degrees) {
         this.rotation += degrees || 0;
+        thisvo.collider.points.forEach(point => {
+          let distX = point.x - this.position.x;
+          let distY = point.y - this.position.y;
+          let angleRad = degrees * Math.PI / 180;
+          point.x = this.position.x + distX * Math.cos(angleRad) - distY * Math.sin(angleRad);
+          point.y = this.position.y + distY * Math.cos(angleRad) + distX * Math.sin(angleRad);
+        });
       },
       scale: function(amt) {
-        this.width *= amt;
-        this.height *= amt;
+        this.width += amt;
+        this.height += amt;
+        thisvo.collider.points.forEach(point => {
+          let distX = point.x - this.position.x;
+          let distY = point.y - this.position.y;
+          point.x += Math.sign(distX) * amt / 2;
+          point.y += Math.sign(distY) * amt / 2;
+        });
       }
     }
     //physics stuff, like simulating forces and velocity
@@ -47,11 +52,7 @@ class vObject {
       update: function() {
         thisvo.transform.translate(this.velocity.x, this.velocity.y);
         //updating gravity and velocity in the y direction
-        if (thisvo.collideBottom() && Math.abs(this.velocity.y) < this.gravity) {
-          this.velocity.y = 0;
-        } else {
-          this.velocity.y += this.gravity;
-        }
+        //  this.velocity.y += this.gravity;
       },
     }
     //collider properties
@@ -65,7 +66,8 @@ class vObject {
           this.colliderVisual.collider.enabled = false;
         }
         this.colliderVisual.transform.position = thisvo.transform.position;
-      }
+			},
+			points: []
     },
     //push this object to be updated
     vObjects.push(this);
@@ -81,51 +83,46 @@ class vObject {
     ctx.beginPath();
   }
 
-  //check collisions. can take parameter for specific object or no param if want to check if colliding in general
-  //regular collisions stick out a little bit more than collisions used for physics
-  collide (other, onlyPhysics = false) {
-    if (other === undefined) {
-      for (let i = 0; i < vObjects.length; i++) {
-        if (this !== vObjects[i] && this.collide(vObjects[i], onlyPhysics)) {
+  //implementing the Seperating Axis Theorem (SAT) collsion
+	satCollide(other = undefined, checkingOther = false) {
+		if (other == undefined) {
+			for (let i = 0; i < vObjects.length; i++) {
+        if (this !== vObjects[i] && this.satCollide(vObjects[i])) {
           return true;
         }
       }
       return false;
-    } else {
-      if (
-        //box collision
-        this.collider.enabled && other.collider.enabled &&
-        (this.transform.position.x + this.transform.width / 2 >= other.transform.position.x - other.transform.width / 2 + (onlyPhysics ? 1 : 0)) &&
-        (this.transform.position.x - this.transform.width / 2 <= other.transform.position.x + other.transform.width / 2 - (onlyPhysics ? 1 : 0)) &&
-        (this.transform.position.y + this.transform.height / 2 >= other.transform.position.y - other.transform.height / 2 + (onlyPhysics ? 1 : 0)) &&
-        (this.transform.position.y - this.transform.height / 2 <= other.transform.position.y + other.transform.height / 2 - (onlyPhysics ? 1 : 0))
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-  
-  collideBottom(other) {
-    if (other === undefined) {
-      for (let i = 0; i < vObjects.length; i++) {
-        if (this !== vObjects[i] && this.collideBottom(vObjects[i])) {
-          return true;
+		} else {
+			for (let i = 0; i < this.collider.points.length; i++) {
+				let thisPoint = this.collider.points[i];
+				let nextPoint = this.collider.points[i + 1 < this.collider.points.length ? i + 1 : 0];
+        let normal = {x: -(nextPoint.y - thisPoint.y), y: nextPoint.x - thisPoint.x};
+        let thisMin, otherMin; thisMin = otherMin = Infinity;
+        let thisMax, otherMax; thisMax = otherMax = -Infinity;
+
+				for (let s1 = 0; s1 < this.collider.points.length; s1++) {
+          let dotValue = this.collider.points[s1].x * normal.x + this.collider.points[s1].y * normal.y;
+					if (dotValue < thisMin) thisMin = dotValue;
+					if (dotValue > thisMax) thisMax = dotValue;
+				}
+
+				for (let s2 = 0; s2 < other.collider.points.length; s2++) {
+          let dotValue = other.collider.points[s2].x * normal.x + other.collider.points[s2].y * normal.y;
+					if (dotValue < otherMin) otherMin = dotValue;
+					if (dotValue > otherMax) otherMax = dotValue;
+        }
+
+				if (!(
+          (thisMin >= otherMin && thisMin <= otherMax) || (otherMin <= thisMax && otherMin >= thisMin) ||
+          (thisMax <= otherMax && thisMax >= otherMin) || (otherMax >= thisMin && otherMax <= thisMax)
+        )) {
+          return false;
         }
       }
-      return false;
-    } else {
-      if (
-        this.collider.enabled && other.collider.enabled &&
-        this.collide(other) && this.transform.position.y < other.transform.position.y
-      ) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
+      //check with other object to complete the test. we don't want max stack calls (reason for checkingOther)
+      return checkingOther ? true : other.satCollide(this, true);
+		}
+	}
 }
 
 //basic vObject that also hold some graphical properties
@@ -134,7 +131,13 @@ class GraphicObject extends vObject {
     super(x, y, width, height);
     this.color = color || "black";
     this.strokeColor = strokeColor || "rgba(0, 0, 0, 0)";
-    this.strokeWidth = strokeWidth || 0;
+		this.strokeWidth = strokeWidth || 0;
+		this.collider.points = [
+			{x: this.transform.position.x - this.transform.width / 2, y: this.transform.position.y - this.transform.height / 2},
+      {x: this.transform.position.x - this.transform.width / 2, y: this.transform.position.y + this.transform.height / 2},
+      {x: this.transform.position.x + this.transform.width / 2, y: this.transform.position.y + this.transform.height / 2},
+			{x: this.transform.position.x + this.transform.width / 2, y: this.transform.position.y - this.transform.height / 2},
+		];
   }
 
   //quickly set up colors and stroke properties to draw
@@ -149,7 +152,7 @@ class GraphicObject extends vObject {
 //rectangle
 class Rect extends GraphicObject {
   constructor (x, y, width, height, color, strokeColor, strokeWidth) {
-    super (x, y, width, height, color, strokeColor, strokeWidth);
+		super (x, y, width, height, color, strokeColor, strokeWidth);
     this.add();
   }
 

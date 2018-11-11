@@ -15,39 +15,67 @@
   <script src = "vGraphics.js"/></script>
   <script>
 
-    var ball = new Circle(canvas.width / 2, canvas.height / 2, 50, "red");
+    var ball = new Circle(300, 500, 50, "red");
     var ground = new Rect(canvas.width / 2, 750, canvas.width, 100, "green");
-    var box = new Rect(100, 500, 50, 150, "yellow", "orange", 5);
-    var box2 = new Rect(500, 600, 100, 20, "purple");
-    var ramp = new Rect(700, 500, 300, 20, "white", "black");
-    ramp.transform.rotation = -45;
-    var testSprite = new Sprite("https://vignette.wikia.nocookie.net/supersmashbrosfanon/images/b/bf/8Bit_Mario.png/revision/latest?cb=20160124140114", 400, 300, 50, 75);
-    var text = new Text("hello", 100, 100, "Arial", 30, "blue");
+    var box = new Rect(100, 500, 50, 350, "yellow", "orange", 5);
+    var box2 = new Rect(500, 200, 500, 20, "purple");
+
+    var dots = [
+      new Circle(0, 0, 10),
+      new Circle(0, 0, 10),
+      new Circle(0, 0, 10),
+      new Circle(0, 0, 10)
+    ];
+    var ballDots = [
+      new Circle(0, 0, 10),
+      new Circle(0, 0, 10),
+      new Circle(0, 0, 10),
+      new Circle(0, 0, 10)
+    ];
+
 
     update();
     function update() {
-      testSprite.transform.rotate(5);
+      box.transform.rotate(2);
+      box2.transform.rotate(-2);
       moveBall();
+      drawDots();
       updateObjects();
       requestAnimationFrame(update);
     }
-    
+
+  
     var speed = 5;
     function moveBall() {
       if (Input.key.getKeyPressed(37))
         ball.transform.translate(-speed, 0);
       if (Input.key.getKeyPressed(39))
         ball.transform.translate(speed, 0);
-      if (Input.key.getKeyDown(32))
-        ball.physics.velocity.y = -12;
+      if (Input.key.getKeyPressed(38))
+        ball.transform.translate(0, -speed);
+      if (Input.key.getKeyPressed(40))
+        ball.transform.translate(0, speed);
+
       
-      if (ball.collide()) {
+      if (ball.satCollide()) {
         ball.color = "blue";
       } else {
         ball.color = "red";
-      }
+      } 
     
       ball.physics.update();
     }
+
+    function drawDots() {
+      for (let i = 0; i < dots.length; i++) {
+        dots[i].transform.position.x = box2.collider.points[i].x;
+        dots[i].transform.position.y = box2.collider.points[i].y;
+      }
+      for (let i = 0; i < ballDots.length; i++) {
+        ballDots[i].transform.position.x = ball.collider.points[i].x;
+        ballDots[i].transform.position.y = ball.collider.points[i].y;
+      }
+    }
+
   </script>
 </html>
