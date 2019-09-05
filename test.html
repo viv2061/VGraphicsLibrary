@@ -1,0 +1,112 @@
+<!-- <!DOCTYPE html> -->
+<html lang="en" dir="ltr">
+    <style>
+        body {
+            text-align: center;
+        }
+
+        canvas {
+            background-color: white;
+            border-style: solid;
+        }
+    </style>
+    <body>
+        <canvas width = "800" height = "800"></canvas>
+    </body>
+    <script src = "vGraphics.js" /></script>
+    <script>
+        Input.key.initialize();
+        Input.mouse.initialize();
+
+        //let sprite = new Sprite("https://www.w3schools.com/w3css/img_lights.jpg", 400, 400);
+        // let rectangle = new Rectangle(500, 500, 400, 20, "red", "black", 1);
+        // rectangle.addComponent("BoxCollider");
+        // rectangle.collider.viewable = true;
+        // rectangle.transform.rotation = -20;
+
+        // let box = new Rectangle(600, 200, 50, 50, "blue");
+        // box.addComponent("BoxCollider");
+        // box.collider.viewable = true;
+        // let v1 = [
+        //     new Vector2d(40, -100),
+        //     new Vector2d(170, 0),
+        //     new Vector2d(-50, 100),
+        //     new Vector2d(-150, -50),
+        //     new Vector2d(-140, -70)
+        // ];
+        let v1 = [
+            new Vector2d(150, 0),
+            new Vector2d(150, 200),
+            new Vector2d(90, 190),
+            new Vector2d(20, 150),
+            new Vector2d(0, 90),
+            new Vector2d(0, 0)
+        ];
+        let v2 = [
+            new Vector2d(170, -100),
+            new Vector2d(170, 220),
+            new Vector2d(110, 210),
+            new Vector2d(40, 170),
+            new Vector2d(0, 110),
+            new Vector2d(0, 0)
+        ];
+        let polygon = new Polygon(200, 300, v1, "orange");
+        polygon.addComponent("PolygonCollider");
+        polygon.collider.vertexes = v1;
+        polygon.collider.viewable = true;
+        polygon.collider.offset = new Vector2d(100, 100);
+
+        // let ground = new Rectangle(400, 750, 800, 100, "green");
+        // ground.addComponent("BoxCollider");
+        // ground.collider.colliderView = true;
+
+        let pSpeed = 5;
+        let count = 0;
+        update();
+        function update() {
+            PhysicsUpdate();
+            polygon.transform.rotate(2);
+            RenderersUpdate();
+            // polygon.transform.width -= pSpeed;
+            // if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
+            //     pSpeed *= -1;
+            // }
+            console.log(polygon.collider.vertexes[0].x);
+            // return;
+            // console.log(polygon.transform.rotation);
+            // console.log(polygon.transform.width);
+            // console.log(polygon.collider.vertexes[0].y);
+            // if (polygon.collider.collidedWith(box)) {
+            //     box.renderer.color = "red";
+            // } else {
+            //     box.renderer.color = "blue";
+            // }
+            // moveBox();
+            //console.log("Velocity: " + box.physicsBody.velocity.x + ", " + box.physicsBody.velocity.y);
+            //console.log("Acceleration: " + box.physicsBody.acceleration.x + ", " + box.physicsBody.acceleration.y);
+            //console.log("LAcceleration: " + box.physicsBody.lastAcceleration.x + ", " + box.physicsBody.lastAcceleration.y);
+            requestAnimationFrame(update);
+        }
+
+        function moveBox() {
+            let speed = 5;
+            if (Input.key.getKeyPressed(37)) {
+                // box.physicsBody.velocity.x = 0;
+                box.transform.translate(-speed, 0);
+            }
+            if (Input.key.getKeyPressed(39)) {
+                // box.physicsBody.velocity.x = 0;
+                box.transform.translate(speed, 0);
+            }
+            if (Input.key.getKeyPressed(38)) {
+                // box.physicsBody.velocity.y = -10;
+                box.transform.translate(0, -speed);
+            }
+            if (Input.key.getKeyPressed(40)) {
+                // box.physicsBody.velocity.y = 0;
+                box.transform.translate(0, speed);
+            }
+        }
+
+    </script>
+</html>

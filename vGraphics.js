@@ -45,12 +45,8 @@ class Transform extends Component {
     }
 
     set rotation(degrees) {
-        let addedAmt = degrees - this.rotation;
         this._rotation = degrees;
-        // also rotate the collider's vertexes
-        if (this.thisvo.collider != null && this.thisvo.collider instanceof PolygonCollider) {
-            this.thisvo.collider.rotate(addedAmt);
-        }
+        if (this.thisvo.collider != null) this.thisvo.collider.updateCollider();
     }
 
     translate(xAmt = 0, yAmt = 0) {
@@ -67,11 +63,8 @@ class Transform extends Component {
     }
 
     set width(newWidth) {
-        let addedAmt = newWidth - this.width;
         this._width = newWidth;
-        if (this.thisvo.collider != null && this.thisvo.collider instanceof PolygonCollider) {
-            this.thisvo.collider.scale(addedAmt, 0);
-        }
+        if (this.thisvo.collider != null) this.thisvo.collider.updateCollider();
     }
 
     get height() {
@@ -79,11 +72,8 @@ class Transform extends Component {
     }
 
     set height(newHeight) {
-        let addedAmt = newHeight - this.height;
         this._height = newHeight;
-        if (this.thisvo.collider != null && this.thisvo.collider instanceof PolygonCollider) {
-            this.thisvo.collider.scale(0, addedAmt);
-        }
+        if (this.thisvo.collider != null) this.thisvo.collider.updateCollider();
     }
 }
 
@@ -259,7 +249,46 @@ class Collider extends Component {
         this.fixed = false;
         this._vertexes = [];
         // TODO: someohow add a way to do offset translation, rotation, and scaling
+        this._offset = {
+            _x: 0,
+            _y: 0,
+            _thisvo: thisvo,
+
+            get x() {
+                return this._x;
+            },
+
+            set x(newX) {
+                this._thisvo.collider._vertexes.forEach(vertex => {
+                    vertex.x = vertex.x - this._x + newX;
+                });
+                this._x = newX;
+            },
+
+            get y() {
+                return this._y;
+            },
+
+            set y(newY) {
+                this._thisvo.collider._vertexes.forEach(vertex => {
+                    vertex.y = vertex.y - this._y + newY;
+                });
+                this._y = newY;
+            }
+        };
+        this.rotation = 0;
+        this._width = 0;
+        this._height = 0;
         this.viewable = false;
+    }
+
+    get offset() {
+        return this._offset;
+    }
+
+    set offset(vector) {
+        this._offset.x = vector.x;
+        this._offset.y = vector.y;
     }
 
     collidedWith(other = undefined, returnMTV = false) {
@@ -289,8 +318,6 @@ class Collider extends Component {
             for (let i = 0; i < thisVertexes.length; i++) {
                 let thisVertex = Vector2d.add(thisPosition, thisVertexes[i]);
                 let nextVertex = Vector2d.add(thisPosition, thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0]);
-                // let thisVertex = thisVertexes[i];
-                // let nextVertex = thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0];
                 // Finding the perpendicular slope. or normal of the side
                 let normal = {
                     x: -(nextVertex.y - thisVertex.y),
@@ -348,8 +375,6 @@ class Collider extends Component {
             for (let i = 0; i < otherVertexes.length; i++) {
                 let thisVertex = Vector2d.add(otherPosition, otherVertexes[i]);
                 let nextVertex = Vector2d.add(otherPosition, otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0]);
-                // let thisVertex = otherVertexes[i];
-                // let nextVertex = otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0];
                 // Finding the perpendicular slope. or normal of the side
                 let normal = {
                     x: -(nextVertex.y - thisVertex.y),
@@ -425,10 +450,8 @@ class PolygonCollider extends Collider {
     constructor(thisvo, vertexes = null) {
         super (thisvo);
         // these variables will be used for scaling the collider
+        this._originalProportions = [];
         this._originalVertexes = [];
-        this._originalSize = new Vector2d();
-        this._currentScale = new Vector2d(1, 1);
-        this.width = this.height = 0;
         // NOTE: vertexes is an array that have points that indicate OFFSET FROM POSITION, NOT ITS TRUE POSITION
         // For example, if position is (100, 200) and one vertex is (-50, 20), then the true position of that vertex is (50, 220)
         if (vertexes == null) {
@@ -438,63 +461,43 @@ class PolygonCollider extends Collider {
             let lowRight = new Vector2d (this.thisvo.transform.width / 2, this.thisvo.transform.height / 2);
             let lowLeft = new Vector2d (-this.thisvo.transform.width / 2, this.thisvo.transform.height / 2);
             this._vertexes = [upLeft, upRight, lowRight, lowLeft];
-            // store the original values to be used for scaling
-            this._originalVertexes = [upLeft, upRight, lowRight, lowLeft];
-            this._originalSize.x = this.width = this.thisvo.transform.width / 2;
-            this._originalSize.y = this.height = this.thisvo.transform.height / 2;
         } else {
             // deep cloning the vertexes
             this._vertexes = [];
             vertexes.forEach(vertex => {
                 this._vertexes.push(new Vector2d(vertex.x, vertex.y));
-                this._originalVertexes.push(new Vector2d(vertex.x, vertex.y));
             });
-            this._originalSize.x = this.calculateWidth();
-            this._originalSize.y = this.calculateHeight();
         }
+        // add to proportions
+        this._vertexes.forEach(vertex => {
+            this._originalProportions.push(new Vector2d(vertex.x / this.thisvo.transform.width, vertex.y / this.thisvo.transform.height));
+            this._originalVertexes.push(new Vector2d(vertex.x, vertex.y));
+        });
         this.colliderViewer = new PolygonRenderer(thisvo, "rgba(0, 0, 0, 0)", "limegreen", 2, this.vertexes, true);
     }
 
-    get vertexes () {
+    get trueVertexes() {
         return this._vertexes;
+    }
+
+    get vertexes () {
+        return this._originalVertexes;
     }
     
     set vertexes (newVertexes) {
-        this._originalVertexes.length = this.vertexes.length = 0;
+        this._vertexes.length = this._originalProportions.length = this._originalVertexes.length = 0;
         newVertexes.forEach(vertex => {
             this._vertexes.push(new Vector2d(vertex.x, vertex.y));
+            this._originalProportions.push(new Vector2d(vertex.x / this.thisvo.transform.width, vertex.y / this.thisvo.transform.height));
             this._originalVertexes.push(new Vector2d(vertex.x, vertex.y));
         });
-        
-        this._originalSize.x = this.width = this.calculateWidth();
-        this._originalSize.y = this.height = this.calculateHeight();
-    }
-
-    calculateWidth () {
-        let min = this.vertexes[0].x;
-        let max = this.vertexes[1].x;
-        this.vertexes.forEach(vertex => {
-            if (vertex.x > max) max = vertex.x;
-            if (vertex.x < min) min = vertex.x;
-        });
-        return max - min;
-    }
-
-    calculateHeight () {
-        let min = this.vertexes[0].y;
-        let max = this.vertexes[1].y;
-        this.vertexes.forEach(vertex => {
-            if (vertex.y > max) max = vertex.y;
-            if (vertex.y < min) min = vertex.y;
-        });
-        return max - min;
     }
 
     // Rotating vertexes requires some funky math I hardly remember
     rotate (degrees = 0) {
         // gotta use radians lol
         let angleRad = degrees * Math.PI / 180;
-        this.vertexes.forEach(vertex => {
+        this._vertexes.forEach(vertex => {
             // x' = x*cos(a) - y*sin(a)
             // y' = y*cos(a) + x*sin(a)
             let temp = vertex.x;
@@ -503,23 +506,31 @@ class PolygonCollider extends Collider {
         });
     }
 
-    scale (amtX, amtY) {
+    scale () {
         // rotate vertexes so it's upright, then later rotate back into previous rotation
         this.rotate(-this.thisvo.transform.rotation);
-        // figure out scaling
-        this.width += amtX;
-        this.height += amtY;
-        this._currentScale = new Vector2d(this.width / this._originalSize.x, this.height / this._originalSize.y);
-        for (let i = 0; i < this.vertexes.length; i++) {
-            this.vertexes[i].x = this._originalVertexes[i].x * this._currentScale.x;
-            this.vertexes[i].y = this._originalVertexes[i].y * this._currentScale.y;
+        for (let i = 0; i < this._vertexes.length; i++) {
+            this._vertexes[i].x = this._originalProportions[i].x * this.thisvo.transform.width;
+            this._vertexes[i].y = this._originalProportions[i].y * this.thisvo.transform.height;
         }
         this.rotate(this.thisvo.transform.rotation);
     }
 
+    updateCollider() {
+        // rotate them according to transform rotation
+        let angleRad = this.thisvo.transform.rotation * Math.PI / 180;
+        for (let i = 0; i < this._vertexes.length; i++) {
+            let originalVertex = Vector2d.add(this._originalVertexes[i], this.offset);
+            this._vertexes[i].x = originalVertex.x * Math.cos(angleRad) - originalVertex.y * Math.sin(angleRad);
+            this._vertexes[i].y = originalVertex.y * Math.cos(angleRad) + originalVertex.x * Math.sin(angleRad);
+        }
+        // now scale
+        // this.scale();
+    }
+
     viewCollider() {
         if (this.viewable) {
-            this.colliderViewer.vertexes = this.vertexes;
+            this.colliderViewer.vertexes = this._vertexes;
             this.colliderViewer.add();
         }
     }
