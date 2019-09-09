@@ -64,14 +64,14 @@
         let count = 0;
         update();
         function update() {
-            PhysicsUpdate();
-            polygon.transform.rotate(2);
             RenderersUpdate();
-            // polygon.transform.width -= pSpeed;
-            // if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
-            //     pSpeed *= -1;
-            // }
-            console.log(polygon.collider.vertexes[0].x);
+            PhysicsUpdate();
+            // polygon.transform.rotate(2);
+            polygon.transform.width -= pSpeed;
+            if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
+                pSpeed *= -1;
+            }
+            console.log(polygon.collider.vertexes[3].x);
             // return;
             // console.log(polygon.transform.rotation);
             // console.log(polygon.transform.width);

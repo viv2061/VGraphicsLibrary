@@ -289,6 +289,11 @@ class Collider extends Component {
     set offset(vector) {
         this._offset.x = vector.x;
         this._offset.y = vector.y;
+        // TODO: remember to make this so that it fills it with new proportions with offset considered
+        this._originalProportions.length = 0;
+        this._originalVertexes.forEach(vertex => {
+            
+        });
     }
 
     collidedWith(other = undefined, returnMTV = false) {
@@ -525,7 +530,7 @@ class PolygonCollider extends Collider {
             this._vertexes[i].y = originalVertex.y * Math.cos(angleRad) + originalVertex.x * Math.sin(angleRad);
         }
         // now scale
-        // this.scale();
+        this.scale();
     }
 
     viewCollider() {
