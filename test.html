@@ -19,21 +19,18 @@
         Input.mouse.initialize();
 
         //let sprite = new Sprite("https://www.w3schools.com/w3css/img_lights.jpg", 400, 400);
-        // let rectangle = new Rectangle(500, 500, 400, 20, "red", "black", 1);
-        // rectangle.addComponent("BoxCollider");
-        // rectangle.collider.viewable = true;
-        // rectangle.transform.rotation = -20;
+        let rectangle = new Rectangle(500, 500, 400, 20, "red", "black", 1);
+        rectangle.addComponent("BoxCollider");
+        rectangle.collider.viewable = true;
+        rectangle.transform.rotation = -20;
+        // rectangle.addComponent("PhysicsBody");
+        // rectangle.physicsBody.isKi
 
-        // let box = new Rectangle(600, 200, 50, 50, "blue");
-        // box.addComponent("BoxCollider");
-        // box.collider.viewable = true;
-        // let v1 = [
-        //     new Vector2d(40, -100),
-        //     new Vector2d(170, 0),
-        //     new Vector2d(-50, 100),
-        //     new Vector2d(-150, -50),
-        //     new Vector2d(-140, -70)
-        // ];
+        let box = new Rectangle(600, 200, 50, 50, "blue");
+        box.addComponent("BoxCollider");
+        box.collider.viewable = true;
+        box.addComponent("PhysicsBody");
+
         let v1 = [
             new Vector2d(150, 0),
             new Vector2d(150, 200),
@@ -54,11 +51,15 @@
         polygon.addComponent("PolygonCollider");
         polygon.collider.vertexes = v1;
         polygon.collider.viewable = true;
-        polygon.collider.offset = new Vector2d(100, 100);
-
-        // let ground = new Rectangle(400, 750, 800, 100, "green");
-        // ground.addComponent("BoxCollider");
-        // ground.collider.colliderView = true;
+        polygon.addComponent("PhysicsBody");
+        polygon.physicsBody.isKinematic = true;
+        // polygon.collider.offset = new Vector2d(100, 100);
+        
+        let ground = new Rectangle(400, 750, 800, 100, "green");
+        ground.addComponent("BoxCollider");
+        ground.collider.viewable = true;
+        ground.addComponent("PhysicsBody");
+        ground.physicsBody.isKinematic = true;
 
         let pSpeed = 5;
         let count = 0;
@@ -66,22 +67,23 @@
         function update() {
             RenderersUpdate();
             PhysicsUpdate();
-            // polygon.transform.rotate(2);
-            polygon.transform.width -= pSpeed;
-            if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
-                pSpeed *= -1;
-            }
+            polygon.transform.rotate(2);
+            // polygon.transform.width -= pSpeed;
+            // polygon.transform.height -= pSpeed * 1.5;
+            // if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
+            //     pSpeed *= -1;
+            // }
             console.log(polygon.collider.vertexes[3].x);
             // return;
             // console.log(polygon.transform.rotation);
             // console.log(polygon.transform.width);
             // console.log(polygon.collider.vertexes[0].y);
-            // if (polygon.collider.collidedWith(box)) {
-            //     box.renderer.color = "red";
-            // } else {
-            //     box.renderer.color = "blue";
-            // }
-            // moveBox();
+            if (ground.collider.collidedWith(box)) {
+                box.renderer.color = "red";
+            } else {
+                box.renderer.color = "blue";
+            }
+            moveBox();
             //console.log("Velocity: " + box.physicsBody.velocity.x + ", " + box.physicsBody.velocity.y);
             //console.log("Acceleration: " + box.physicsBody.acceleration.x + ", " + box.physicsBody.acceleration.y);
             //console.log("LAcceleration: " + box.physicsBody.lastAcceleration.x + ", " + box.physicsBody.lastAcceleration.y);

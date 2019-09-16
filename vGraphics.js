@@ -289,10 +289,9 @@ class Collider extends Component {
     set offset(vector) {
         this._offset.x = vector.x;
         this._offset.y = vector.y;
-        // TODO: remember to make this so that it fills it with new proportions with offset considered
         this._originalProportions.length = 0;
         this._originalVertexes.forEach(vertex => {
-            
+            this._originalProportions.push(new Vector2d((vertex.x + vector.x) / this.thisvo.transform.width, (vertex.y + vector.y) / this.thisvo.transform.height));
         });
     }
 
@@ -311,8 +310,8 @@ class Collider extends Component {
             // let concatIndex = this.vertexes.length;
             // let allVertexes = [];
             // allVertexes = allVertexes.concat(this.vertexes, other.collider.vertexes);
-            let thisVertexes = this.vertexes;
-            let otherVertexes = other.collider.vertexes;
+            let thisVertexes = this.trueVertexes;
+            let otherVertexes = other.collider.trueVertexes;
             let normalMTV;
             let smallestOverlap = Infinity;
             let thisPosition = this.thisvo.transform.position;
@@ -481,10 +480,12 @@ class PolygonCollider extends Collider {
         this.colliderViewer = new PolygonRenderer(thisvo, "rgba(0, 0, 0, 0)", "limegreen", 2, this.vertexes, true);
     }
 
+    // true vertexes refer to the actual vertex position on the canvas (after all the collider transformations and rotations etc)
     get trueVertexes() {
         return this._vertexes;
     }
 
+    // regular vertexes refer to the vertexes position relative to the actual transform position (not including offset)
     get vertexes () {
         return this._originalVertexes;
     }
@@ -672,10 +673,10 @@ function PhysicsUpdate() {
         let physicsBody = vObject.physicsBody;
         if (physicsBody != null) {
             // applying those physics
-            // if (!physicsBody.isKinematic) {
-            //     physicsBody.velocity.x += physicsBody.acceleration.x;
-            //     physicsBody.velocity.y += physicsBody.acceleration.y;
-            // }
+            if (!physicsBody.isKinematic) {
+                // physicsBody.velocity.x += physicsBody.acceleration.x;
+                // physicsBody.velocity.y += physicsBody.acceleration.y;
+            }
             vObject.transform.translate(physicsBody.velocity.x, physicsBody.velocity.y);
             // making sure collisions occur and objects are moved appropriately
             if (collider != null && collider.enabled) {
@@ -685,7 +686,7 @@ function PhysicsUpdate() {
                         if (collider.collidedWith(other)) {
                             let mtv = vObject.collider.collidedWith(other, true);
                             vObject.transform.translate(mtv.x, mtv.y);
-                            //momentum stuff
+                            // //momentum stuff
                             // let otherPhysics = other.physicsBody;
                             // let finalVelocityX = physicsBody.mass * physicsBody.velocity.x + other.physicsBody.mass * oht
                             // if (mtv.x != 0 || mtv.y != 0) {
