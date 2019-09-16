@@ -318,21 +318,24 @@ class Collider extends Component {
             let otherPosition = other.transform.position;
             let directionVector = Vector2d.subtract(thisPosition, otherPosition);
 
-            // Start off with the first shape axis
+            // Start off with the FIRST shape vertexes
             for (let i = 0; i < thisVertexes.length; i++) {
                 let thisVertex = Vector2d.add(thisPosition, thisVertexes[i]);
                 let nextVertex = Vector2d.add(thisPosition, thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0]);
+                
                 // Finding the perpendicular slope. or normal of the side
                 let normal = {
                     x: -(nextVertex.y - thisVertex.y),
                     y: nextVertex.x - thisVertex.x
                 }
                 normal = Vector2d.normalize(normal);
+               
                 // Check to see if normal is pointing outwards of the shape
                 let normalDotDirection = Vector2d.dotProduct(normal, directionVector);
                 if (normalDotDirection < 0) {
                     normal = Vector2d.multiply(-1, normal);
                 }
+                
                 // The mins and maxes using the dot product
                 // We'll use them to compare to see if they overlap
                 let thisMin, otherMin; thisMin = otherMin = Infinity;
@@ -375,7 +378,7 @@ class Collider extends Component {
                 }
             }
 
-            // Now do it all over again with the other shape axis
+            // Now do it all over again with the OTHER shape vertexes
             for (let i = 0; i < otherVertexes.length; i++) {
                 let thisVertex = Vector2d.add(otherPosition, otherVertexes[i]);
                 let nextVertex = Vector2d.add(otherPosition, otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0]);
@@ -431,6 +434,7 @@ class Collider extends Component {
                     return false;
                 }
             }
+            //
             if (returnMTV) {
                 let mtv = Vector2d.multiply(smallestOverlap, normalMTV);
                 return mtv;
@@ -536,6 +540,7 @@ class PolygonCollider extends Collider {
 
     viewCollider() {
         if (this.viewable) {
+            // updating the vertexes on the graphic renderer on colliderViewer to match with the true vertices
             this.colliderViewer.vertexes = this._vertexes;
             this.colliderViewer.add();
         }
@@ -665,47 +670,40 @@ function RenderersUpdate () {
     });
 }
 
-// TODO: improve physics collisions and engine
+// TODO: improve physics collisions and engine with near and far collision
 // Physics updater
 function PhysicsUpdate() {
     vObjects.forEach(vObject => {
         let collider = vObject.collider;
         let physicsBody = vObject.physicsBody;
-        if (physicsBody != null) {
+        
+        // check if there's actually a valid physicsBody on this vObject
+        if (physicsBody != null && physicsBody.enabled) {
+            
             // applying those physics
             if (!physicsBody.isKinematic) {
-                // physicsBody.velocity.x += physicsBody.acceleration.x;
-                // physicsBody.velocity.y += physicsBody.acceleration.y;
+                physicsBody.velocity.x += physicsBody.acceleration.x;
+                physicsBody.velocity.y += physicsBody.acceleration.y;
             }
             vObject.transform.translate(physicsBody.velocity.x, physicsBody.velocity.y);
+            
             // making sure collisions occur and objects are moved appropriately
+            // first check
             if (collider != null && collider.enabled) {
-                let colliding = false;
                 vObjects.forEach(other => {
-                    if (other.physicsBody != null && other.collider != null && other.collider.enabled && collider !== other.collider && !physicsBody.isKinematic) {
-                        if (collider.collidedWith(other)) {
-                            let mtv = vObject.collider.collidedWith(other, true);
+                    // first check if it is the same object or not
+                    if (other !== vObject) {
+                        // check if collider on other object is good
+                        if (other.collider != null && other.collider.enabled) {
+                            // check if physicsBody on other object is good
+                            
+                            // console.log(other.transform.position.x);
+                            // console.log("word");
+                            let mtv = collider.collidedWith(other, true);
                             vObject.transform.translate(mtv.x, mtv.y);
-                            // //momentum stuff
-                            // let otherPhysics = other.physicsBody;
-                            // let finalVelocityX = physicsBody.mass * physicsBody.velocity.x + other.physicsBody.mass * oht
-                            // if (mtv.x != 0 || mtv.y != 0) {
-                            //     let nMtv = Vector2d.normalize(mtv);
-                            //     let angle = Math.abs(Math.atan2(nMtv.y, nMtv.x));
-                            //     angle = Math.sign(nMtv.y) == -1 ? 2 * Math.PI - angle : angle;
-                            //     let accelMag = physicsBody.acceleration.magnitude;
-                            //     physicsBody.acceleration.x = accelMag * Math.cos(angle);
-                            //     physicsBody.acceleration.y = accelMag * Math.sin(angle);
-                            //     //console.log(angle / Math.PI * 180 + ", " + physicsBody.acceleration.x);
-                            //     colliding = true;
-                            // }
                         }
                     }
                 });
-                if (!colliding) {
-                    physicsBody.acceleration.x = 0;
-                    physicsBody.acceleration.y = physicsBody.gravity;
-                }
             }
         }
     });

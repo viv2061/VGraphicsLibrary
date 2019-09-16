@@ -23,13 +23,13 @@
         rectangle.addComponent("BoxCollider");
         rectangle.collider.viewable = true;
         rectangle.transform.rotation = -20;
-        // rectangle.addComponent("PhysicsBody");
-        // rectangle.physicsBody.isKi
+        
 
         let box = new Rectangle(600, 200, 50, 50, "blue");
         box.addComponent("BoxCollider");
         box.collider.viewable = true;
         box.addComponent("PhysicsBody");
+        box.physicsBody.isKinematic = true;
 
         let v1 = [
             new Vector2d(150, 0),
@@ -67,26 +67,19 @@
         function update() {
             RenderersUpdate();
             PhysicsUpdate();
-            polygon.transform.rotate(2);
+            // polygon.transform.rotate(2);
             // polygon.transform.width -= pSpeed;
             // polygon.transform.height -= pSpeed * 1.5;
             // if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
             //     pSpeed *= -1;
             // }
-            console.log(polygon.collider.vertexes[3].x);
             // return;
-            // console.log(polygon.transform.rotation);
-            // console.log(polygon.transform.width);
-            // console.log(polygon.collider.vertexes[0].y);
-            if (ground.collider.collidedWith(box)) {
+            if (polygon.collider.collidedWith(box)) {
                 box.renderer.color = "red";
             } else {
                 box.renderer.color = "blue";
             }
             moveBox();
-            //console.log("Velocity: " + box.physicsBody.velocity.x + ", " + box.physicsBody.velocity.y);
-            //console.log("Acceleration: " + box.physicsBody.acceleration.x + ", " + box.physicsBody.acceleration.y);
-            //console.log("LAcceleration: " + box.physicsBody.lastAcceleration.x + ", " + box.physicsBody.lastAcceleration.y);
             requestAnimationFrame(update);
         }
 
