@@ -9,8 +9,16 @@
             background-color: white;
             border-style: solid;
         }
+        #darkMode {
+            background-color:#001122;
+        }
+
+        #darkMode canvas {
+            background-color: #000011;
+            border: darkslategrey solid;
+        }
     </style>
-    <body>
+    <body id = "darkMode">
         <canvas width = "800" height = "800"></canvas>
     </body>
     <script src = "vGraphics.js" /></script>
@@ -18,14 +26,16 @@
         Input.key.initialize();
         Input.mouse.initialize();
 
-        //let sprite = new Sprite("https://www.w3schools.com/w3css/img_lights.jpg", 400, 400);
         let rectangle = new Rectangle(500, 500, 400, 20, "red", "black", 1);
+        rectangle.transform.rotation = -20;
+        rectangle.name = "rectangle";
         rectangle.addComponent("BoxCollider");
         rectangle.collider.viewable = true;
-        rectangle.transform.rotation = -20;
-        
+        rectangle.addComponent("PhysicsBody");
+        rectangle.physicsBody.isKinematic = true   
 
         let box = new Rectangle(600, 200, 50, 50, "blue");
+        box.name = "box";
         box.addComponent("BoxCollider");
         box.collider.viewable = true;
         box.addComponent("PhysicsBody");
@@ -48,6 +58,7 @@
             new Vector2d(0, 0)
         ];
         let polygon = new Polygon(200, 300, v1, "orange");
+        polygon.name = "polygon";
         polygon.addComponent("PolygonCollider");
         polygon.collider.vertexes = v1;
         polygon.collider.viewable = true;
@@ -55,7 +66,8 @@
         polygon.physicsBody.isKinematic = true;
         // polygon.collider.offset = new Vector2d(100, 100);
         
-        let ground = new Rectangle(400, 750, 800, 100, "green");
+        let ground = new Rectangle(400, 750, 700, 50, "green");
+        ground.name = "ground";
         ground.addComponent("BoxCollider");
         ground.collider.viewable = true;
         ground.addComponent("PhysicsBody");
@@ -66,7 +78,6 @@
         update();
         function update() {
             RenderersUpdate();
-            PhysicsUpdate();
             // polygon.transform.rotate(2);
             // polygon.transform.width -= pSpeed;
             // polygon.transform.height -= pSpeed * 1.5;
@@ -74,12 +85,13 @@
             //     pSpeed *= -1;
             // }
             // return;
-            if (polygon.collider.collidedWith(box)) {
+            if (box.collider.collidedWith()) {
                 box.renderer.color = "red";
             } else {
                 box.renderer.color = "blue";
             }
             moveBox();
+            PhysicsUpdate();
             requestAnimationFrame(update);
         }
 

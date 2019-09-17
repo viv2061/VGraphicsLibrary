@@ -250,9 +250,10 @@ class Collider extends Component {
         this._vertexes = [];
         // TODO: someohow add a way to do offset translation, rotation, and scaling
         this._offset = {
+            _thisvo: thisvo,
             _x: 0,
             _y: 0,
-            _thisvo: thisvo,
+            _rotation: thisvo.transform.rotation,
 
             get x() {
                 return this._x;
@@ -274,11 +275,17 @@ class Collider extends Component {
                     vertex.y = vertex.y - this._y + newY;
                 });
                 this._y = newY;
+            },
+
+            get rotation() {
+                return this._rotation;
+            },
+
+            set rotation(amt) {
+
             }
         };
         this.rotation = 0;
-        this._width = 0;
-        this._height = 0;
         this.viewable = false;
     }
 
@@ -434,9 +441,10 @@ class Collider extends Component {
                     return false;
                 }
             }
-            //
+            
             if (returnMTV) {
                 let mtv = Vector2d.multiply(smallestOverlap, normalMTV);
+                
                 return mtv;
             } else {
                 return true;
@@ -481,7 +489,7 @@ class PolygonCollider extends Collider {
             this._originalProportions.push(new Vector2d(vertex.x / this.thisvo.transform.width, vertex.y / this.thisvo.transform.height));
             this._originalVertexes.push(new Vector2d(vertex.x, vertex.y));
         });
-        this.colliderViewer = new PolygonRenderer(thisvo, "rgba(0, 0, 0, 0)", "limegreen", 2, this.vertexes, true);
+        this.colliderViewer = new PolygonRenderer(thisvo, "rgba(0, 0, 0, 0)", "limegreen", 4, this.vertexes, true);
     }
 
     // true vertexes refer to the actual vertex position on the canvas (after all the collider transformations and rotations etc)
@@ -670,7 +678,7 @@ function RenderersUpdate () {
     });
 }
 
-// TODO: improve physics collisions and engine with near and far collision
+// TODO: improve physics collisions and engine. mtv kinda works now. Not perfect
 // Physics updater
 function PhysicsUpdate() {
     vObjects.forEach(vObject => {
@@ -682,13 +690,13 @@ function PhysicsUpdate() {
             
             // applying those physics
             if (!physicsBody.isKinematic) {
-                physicsBody.velocity.x += physicsBody.acceleration.x;
-                physicsBody.velocity.y += physicsBody.acceleration.y;
+                // physicsBody.velocity.x += physicsBody.acceleration.x;
+                // physicsBody.velocity.y += physicsBody.acceleration.y;
             }
             vObject.transform.translate(physicsBody.velocity.x, physicsBody.velocity.y);
             
             // making sure collisions occur and objects are moved appropriately
-            // first check
+            // first check if our collider is good
             if (collider != null && collider.enabled) {
                 vObjects.forEach(other => {
                     // first check if it is the same object or not
@@ -696,11 +704,18 @@ function PhysicsUpdate() {
                         // check if collider on other object is good
                         if (other.collider != null && other.collider.enabled) {
                             // check if physicsBody on other object is good
-                            
-                            // console.log(other.transform.position.x);
-                            // console.log("word");
-                            let mtv = collider.collidedWith(other, true);
-                            vObject.transform.translate(mtv.x, mtv.y);
+                            if (other.physicsBody != null && other.physicsBody.enabled) {
+                                // applied it to both.
+                                /*
+                                    If you only apply to one object, then it will move out the way, thus when we loop to the next object
+                                    that object will not move because the previous object has already moved out the way, thus no need for the
+                                    second object to move
+                                */
+                                let mtv = collider.collidedWith(other, true);
+                                let otherMtv = other.collider.collidedWith(vObject, true);
+                                vObject.transform.translate(mtv.x, mtv.y);
+                                other.transform.translate(otherMtv.x, otherMtv.y);
+                            }
                         }
                     }
                 });
