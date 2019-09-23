@@ -31,15 +31,8 @@
         rectangle.name = "rectangle";
         rectangle.addComponent("BoxCollider");
         rectangle.collider.viewable = true;
-        rectangle.addComponent("PhysicsBody");
-        rectangle.physicsBody.isKinematic = true   
-
-        let box = new Rectangle(600, 200, 50, 50, "blue");
-        box.name = "box";
-        box.addComponent("BoxCollider");
-        box.collider.viewable = true;
-        box.addComponent("PhysicsBody");
-        box.physicsBody.isKinematic = true;
+        // rectangle.addComponent("PhysicsBody");
+        // rectangle.physicsBody.isKinematic = true   
 
         let v1 = [
             new Vector2d(150, 0),
@@ -62,36 +55,46 @@
         polygon.addComponent("PolygonCollider");
         polygon.collider.vertexes = v1;
         polygon.collider.viewable = true;
-        polygon.addComponent("PhysicsBody");
-        polygon.physicsBody.isKinematic = true;
-        // polygon.collider.offset = new Vector2d(100, 100);
+        polygon.collider.offset = new Vector2d(100, 100);
+        // polygon.addComponent("PhysicsBody");
+        // polygon.physicsBody.isKinematic = true;
         
+        let box = new Rectangle(600, 200, 50, 50, "blue");
+        box.name = "box";
+        box.addComponent("BoxCollider");
+        box.collider.viewable = true;
+        // box.addComponent("PhysicsBody");
+        // box.physicsBody.isKinematic = true;
+
+
         let ground = new Rectangle(400, 750, 700, 50, "green");
         ground.name = "ground";
         ground.addComponent("BoxCollider");
         ground.collider.viewable = true;
-        ground.addComponent("PhysicsBody");
-        ground.physicsBody.isKinematic = true;
+        // ground.addComponent("PhysicsBody");
+        // ground.physicsBody.isKinematic = true;
 
         let pSpeed = 5;
         let count = 0;
         update();
         function update() {
             RenderersUpdate();
+            // PhysicsUpdate();
             // polygon.transform.rotate(2);
-            // polygon.transform.width -= pSpeed;
+            polygon.transform.width -= pSpeed;
             // polygon.transform.height -= pSpeed * 1.5;
-            // if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
-            //     pSpeed *= -1;
-            // }
-            // return;
-            if (box.collider.collidedWith()) {
+            if (Math.abs(polygon.transform.width) > 170 || Math.abs(polygon.transform.height) > 500) {
+                pSpeed *= -1;
+            }
+            // console.log(polygon.collider.trueVertexes[2].x);
+            // FIXME: why does it work with polygon collide box, but not box collide polygon
+            // it works when polygon on right, but not when on left??????????
+            if (box.collider.collidedWith(polygon)) {
                 box.renderer.color = "red";
             } else {
                 box.renderer.color = "blue";
             }
             moveBox();
-            PhysicsUpdate();
             requestAnimationFrame(update);
         }
 

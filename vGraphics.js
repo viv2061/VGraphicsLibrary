@@ -260,7 +260,7 @@ class Collider extends Component {
             },
 
             set x(newX) {
-                this._thisvo.collider._vertexes.forEach(vertex => {
+                this._thisvo.collider.trueRelativeVertexes.forEach(vertex => {
                     vertex.x = vertex.x - this._x + newX;
                 });
                 this._x = newX;
@@ -271,7 +271,7 @@ class Collider extends Component {
             },
 
             set y(newY) {
-                this._thisvo.collider._vertexes.forEach(vertex => {
+                this._thisvo.collider.trueRelativeVertexes.forEach(vertex => {
                     vertex.y = vertex.y - this._y + newY;
                 });
                 this._y = newY;
@@ -317,8 +317,9 @@ class Collider extends Component {
             // let concatIndex = this.vertexes.length;
             // let allVertexes = [];
             // allVertexes = allVertexes.concat(this.vertexes, other.collider.vertexes);
-            let thisVertexes = this.trueVertexes;
-            let otherVertexes = other.collider.trueVertexes;
+            let thisVertexes = this.trueRelativeVertexes;
+            let otherVertexes = other.collider.trueRelativeVertexes;
+            // console.log(otherVertexes);
             let normalMTV;
             let smallestOverlap = Infinity;
             let thisPosition = this.thisvo.transform.position;
@@ -327,8 +328,11 @@ class Collider extends Component {
 
             // Start off with the FIRST shape vertexes
             for (let i = 0; i < thisVertexes.length; i++) {
+                // let thisVertex = thisVertexes[i];
+                // let nextVertex = thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0];
                 let thisVertex = Vector2d.add(thisPosition, thisVertexes[i]);
                 let nextVertex = Vector2d.add(thisPosition, thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0]);
+                console.log(thisVertex);
                 
                 // Finding the perpendicular slope. or normal of the side
                 let normal = {
@@ -387,6 +391,8 @@ class Collider extends Component {
 
             // Now do it all over again with the OTHER shape vertexes
             for (let i = 0; i < otherVertexes.length; i++) {
+                // let thisVertex = otherVertexes[i];
+                // let nextVertex = otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0];
                 let thisVertex = Vector2d.add(otherPosition, otherVertexes[i]);
                 let nextVertex = Vector2d.add(otherPosition, otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0]);
                 // Finding the perpendicular slope. or normal of the side
@@ -461,7 +467,7 @@ class EllipseCollider extends Collider {
 
 // Polygon colliders are much complicated, and require much more work if the collider is not convex
 // Generally, it is not a good idea to use a polygon collider when not needed
-// TODO: refactor this so that instead of having functions with parameters for modifiying the collider shape (using transform functions), it isntead updates independtly
+// TODO: refactor this so that instead of having functions with parameters for modifiying the collider shape (using transform functions), it instead updates independtly
 class PolygonCollider extends Collider {
     constructor(thisvo, vertexes = null) {
         super (thisvo);
@@ -470,6 +476,8 @@ class PolygonCollider extends Collider {
         this._originalVertexes = [];
         // NOTE: vertexes is an array that have points that indicate OFFSET FROM POSITION, NOT ITS TRUE POSITION
         // For example, if position is (100, 200) and one vertex is (-50, 20), then the true position of that vertex is (50, 220)
+        // The variable this._vertexes shown below will store the true RELATIVE position, or true offset from transform position
+        // You can access the vertexes TRUE position (meaning position on canvas, relative to canvas origin) with the getter variable trueVariables
         if (vertexes == null) {
             // if no vertexes given, then assume a rectangle shaped collider
             let upLeft = new Vector2d (-this.thisvo.transform.width / 2, -this.thisvo.transform.height / 2);
@@ -479,6 +487,7 @@ class PolygonCollider extends Collider {
             this._vertexes = [upLeft, upRight, lowRight, lowLeft];
         } else {
             // deep cloning the vertexes
+            // this._vertexes will only include the true relative vertexes (relative to vObject position)
             this._vertexes = [];
             vertexes.forEach(vertex => {
                 this._vertexes.push(new Vector2d(vertex.x, vertex.y));
@@ -492,20 +501,30 @@ class PolygonCollider extends Collider {
         this.colliderViewer = new PolygonRenderer(thisvo, "rgba(0, 0, 0, 0)", "limegreen", 4, this.vertexes, true);
     }
 
-    // true vertexes refer to the actual vertex position on the canvas (after all the collider transformations and rotations etc)
+    // true vertexes refer to the vertexes positin relative to canvas origin
     get trueVertexes() {
+        let temp = [];
+        this.trueRelativeVertexes.forEach(vertex => {
+            temp.push(Vector2d.add(vertex, this.thisvo.transform.position));
+        });
+        return temp;
+    }
+
+    // true relative vertexes refer to the vertex position relative to the transform position. 
+    get trueRelativeVertexes() {
         return this._vertexes;
     }
 
-    // regular vertexes refer to the vertexes position relative to the actual transform position (not including offset)
+    // regular vertexes refer to the vertexes position relative to the transform position (not including offset)
+    // Similar to trueRelativeVertexes, except it doesn't change, shows original vertexes. Just for user friendly
     get vertexes () {
         return this._originalVertexes;
     }
     
     set vertexes (newVertexes) {
-        this._vertexes.length = this._originalProportions.length = this._originalVertexes.length = 0;
+        this.trueRelativeVertexes.length = this._originalProportions.length = this._originalVertexes.length = 0;
         newVertexes.forEach(vertex => {
-            this._vertexes.push(new Vector2d(vertex.x, vertex.y));
+            this.trueRelativeVertexes.push(new Vector2d(vertex.x, vertex.y));
             this._originalProportions.push(new Vector2d(vertex.x / this.thisvo.transform.width, vertex.y / this.thisvo.transform.height));
             this._originalVertexes.push(new Vector2d(vertex.x, vertex.y));
         });
@@ -515,7 +534,7 @@ class PolygonCollider extends Collider {
     rotate (degrees = 0) {
         // gotta use radians lol
         let angleRad = degrees * Math.PI / 180;
-        this._vertexes.forEach(vertex => {
+        this.trueRelativeVertexes.forEach(vertex => {
             // x' = x*cos(a) - y*sin(a)
             // y' = y*cos(a) + x*sin(a)
             let temp = vertex.x;
@@ -527,9 +546,9 @@ class PolygonCollider extends Collider {
     scale () {
         // rotate vertexes so it's upright, then later rotate back into previous rotation
         this.rotate(-this.thisvo.transform.rotation);
-        for (let i = 0; i < this._vertexes.length; i++) {
-            this._vertexes[i].x = this._originalProportions[i].x * this.thisvo.transform.width;
-            this._vertexes[i].y = this._originalProportions[i].y * this.thisvo.transform.height;
+        for (let i = 0; i < this.trueRelativeVertexes.length; i++) {
+            this.trueRelativeVertexes[i].x = this._originalProportions[i].x * this.thisvo.transform.width;
+            this.trueRelativeVertexes[i].y = this._originalProportions[i].y * this.thisvo.transform.height;
         }
         this.rotate(this.thisvo.transform.rotation);
     }
@@ -539,8 +558,8 @@ class PolygonCollider extends Collider {
         let angleRad = this.thisvo.transform.rotation * Math.PI / 180;
         for (let i = 0; i < this._vertexes.length; i++) {
             let originalVertex = Vector2d.add(this._originalVertexes[i], this.offset);
-            this._vertexes[i].x = originalVertex.x * Math.cos(angleRad) - originalVertex.y * Math.sin(angleRad);
-            this._vertexes[i].y = originalVertex.y * Math.cos(angleRad) + originalVertex.x * Math.sin(angleRad);
+            this.trueRelativeVertexes[i].x = originalVertex.x * Math.cos(angleRad) - originalVertex.y * Math.sin(angleRad);
+            this.trueRelativeVertexes[i].y = originalVertex.y * Math.cos(angleRad) + originalVertex.x * Math.sin(angleRad);
         }
         // now scale
         this.scale();
@@ -549,7 +568,7 @@ class PolygonCollider extends Collider {
     viewCollider() {
         if (this.viewable) {
             // updating the vertexes on the graphic renderer on colliderViewer to match with the true vertices
-            this.colliderViewer.vertexes = this._vertexes;
+            this.colliderViewer.vertexes = this.trueRelativeVertexes;
             this.colliderViewer.add();
         }
     }
