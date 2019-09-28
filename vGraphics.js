@@ -317,23 +317,20 @@ class Collider extends Component {
             // let concatIndex = this.vertexes.length;
             // let allVertexes = [];
             // allVertexes = allVertexes.concat(this.vertexes, other.collider.vertexes);
-            let thisVertexes = this.trueRelativeVertexes;
-            let otherVertexes = other.collider.trueRelativeVertexes;
-            // console.log(otherVertexes);
+            let thisVertexes = this.trueVertexes;
+            let otherVertexes = other.collider.trueVertexes;
             let normalMTV;
             let smallestOverlap = Infinity;
             let thisPosition = this.thisvo.transform.position;
             let otherPosition = other.transform.position;
             let directionVector = Vector2d.subtract(thisPosition, otherPosition);
 
+            // console.log("start");
             // Start off with the FIRST shape vertexes
             for (let i = 0; i < thisVertexes.length; i++) {
-                // let thisVertex = thisVertexes[i];
-                // let nextVertex = thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0];
-                let thisVertex = Vector2d.add(thisPosition, thisVertexes[i]);
-                let nextVertex = Vector2d.add(thisPosition, thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0]);
-                console.log(thisVertex);
-                
+                let thisVertex = thisVertexes[i];
+                let nextVertex = thisVertexes[i + 1 < thisVertexes.length ? i + 1 : 0];
+
                 // Finding the perpendicular slope. or normal of the side
                 let normal = {
                     x: -(nextVertex.y - thisVertex.y),
@@ -356,14 +353,14 @@ class Collider extends Component {
                 // all of our vertexes, and do the dot product between
                 // the vertex and the axis. We store the maxes and mins
                 thisVertexes.forEach(vertex => {
-                    let dotValue = Vector2d.dotProduct(Vector2d.add(thisPosition, vertex), normal);
+                    let dotValue = Vector2d.dotProduct(vertex, normal);
                     if (dotValue < thisMin) thisMin = dotValue;
                     if (dotValue > thisMax) thisMax = dotValue;
                 });
 
                 // Do the same thing with second collider
-                other.collider.vertexes.forEach(vertex => {
-                    let dotValue = Vector2d.dotProduct(Vector2d.add(otherPosition, vertex), normal);
+                otherVertexes.forEach(vertex => {
+                    let dotValue = Vector2d.dotProduct(vertex, normal);
                     if (dotValue < otherMin) otherMin = dotValue;
                     if (dotValue > otherMax) otherMax = dotValue;
                 });
@@ -391,10 +388,8 @@ class Collider extends Component {
 
             // Now do it all over again with the OTHER shape vertexes
             for (let i = 0; i < otherVertexes.length; i++) {
-                // let thisVertex = otherVertexes[i];
-                // let nextVertex = otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0];
-                let thisVertex = Vector2d.add(otherPosition, otherVertexes[i]);
-                let nextVertex = Vector2d.add(otherPosition, otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0]);
+                let thisVertex = otherVertexes[i];
+                let nextVertex = otherVertexes[i + 1 < otherVertexes.length ? i + 1 : 0];
                 // Finding the perpendicular slope. or normal of the side
                 let normal = {
                     x: -(nextVertex.y - thisVertex.y),
@@ -414,15 +409,15 @@ class Collider extends Component {
                 // After we find a normal axis to compare to, we run through
                 // all of our vertexes, and do the dot product between
                 // the vertex and the axis. We store the maxes and mins
-                thisVertexes.forEach(vertex => {
-                    let dotValue = Vector2d.dotProduct(Vector2d.add(thisPosition, vertex), normal);
+                otherVertexes.forEach(vertex => {
+                    let dotValue = Vector2d.dotProduct(vertex, normal);
                     if (dotValue < thisMin) thisMin = dotValue;
                     if (dotValue > thisMax) thisMax = dotValue;
                 });
 
                 // Do the same thing with second collider
-                otherVertexes.forEach(vertex => {
-                    let dotValue = Vector2d.dotProduct(Vector2d.add(otherPosition, vertex), normal);
+                thisVertexes.forEach(vertex => {
+                    let dotValue = Vector2d.dotProduct(vertex, normal);
                     if (dotValue < otherMin) otherMin = dotValue;
                     if (dotValue > otherMax) otherMax = dotValue;
                 });
@@ -450,7 +445,6 @@ class Collider extends Component {
             
             if (returnMTV) {
                 let mtv = Vector2d.multiply(smallestOverlap, normalMTV);
-                
                 return mtv;
             } else {
                 return true;

@@ -95,6 +95,9 @@
                 box.renderer.color = "blue";
             }
             moveBox();
+            if (Input.key.getKeyPressed(32)) {
+                return;
+            }
             requestAnimationFrame(update);
         }
 
