@@ -31,8 +31,8 @@
         rectangle.name = "rectangle";
         rectangle.addComponent("BoxCollider");
         rectangle.collider.viewable = true;
-        // rectangle.addComponent("PhysicsBody");
-        // rectangle.physicsBody.isKinematic = true   
+        rectangle.addComponent("PhysicsBody");
+        rectangle.physicsBody.isKinematic = true
 
         let v1 = [
             new Vector2d(150, 0),
@@ -56,30 +56,30 @@
         polygon.collider.vertexes = v1;
         polygon.collider.viewable = true;
         polygon.collider.offset = new Vector2d(100, 100);
-        // polygon.addComponent("PhysicsBody");
-        // polygon.physicsBody.isKinematic = true;
+        polygon.addComponent("PhysicsBody");
+        polygon.physicsBody.isKinematic = true;
         
         let box = new Rectangle(600, 200, 50, 50, "blue");
         box.name = "box";
         box.addComponent("BoxCollider");
         box.collider.viewable = true;
-        // box.addComponent("PhysicsBody");
-        // box.physicsBody.isKinematic = true;
+        box.addComponent("PhysicsBody");
+        box.physicsBody.isKinematic = true;
 
 
         let ground = new Rectangle(400, 750, 700, 50, "green");
         ground.name = "ground";
         ground.addComponent("BoxCollider");
         ground.collider.viewable = true;
-        // ground.addComponent("PhysicsBody");
-        // ground.physicsBody.isKinematic = true;
+        ground.addComponent("PhysicsBody");
+        ground.physicsBody.isKinematic = true;
 
         let pSpeed = 5;
         let count = 0;
         update();
         function update() {
             RenderersUpdate();
-            // PhysicsUpdate();
+            PhysicsUpdate();
             // polygon.transform.rotate(2);
             polygon.transform.width -= pSpeed;
             // polygon.transform.height -= pSpeed * 1.5;
